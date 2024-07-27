@@ -4,6 +4,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { Container, Typography } from '@mui/material';
 
 const localizer = momentLocalizer(moment);
 
@@ -27,8 +28,10 @@ const WorkSchedule: React.FC = () => {
   }));
 
   return (
-    <div>
-      <h1>Work Schedule</h1>
+    <Container>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Work Schedule
+      </Typography>
       <Calendar
         localizer={localizer}
         events={events}
@@ -36,7 +39,7 @@ const WorkSchedule: React.FC = () => {
         endAccessor="end"
         style={{ height: 500 }}
       />
-    </div>
+    </Container>
   );
 };
 

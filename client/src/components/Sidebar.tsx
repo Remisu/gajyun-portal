@@ -1,6 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styled, { createGlobalStyle } from 'styled-components';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 
 // Importar todas as imagens da pasta src/images
 const importAll = (r: any) => r.keys().map(r);
@@ -146,6 +148,17 @@ const LogoutButton = styled.button`
 `;
 
 const Sidebar: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
   return (
     <SidebarContainer>
       <GlobalStyle />
@@ -159,7 +172,7 @@ const Sidebar: React.FC = () => {
       </EmployeeFrame>
       <SidebarButton to="/work-schedule">Work Schedule</SidebarButton>
       <SidebarButton to="/schedule-management">Schedule Management</SidebarButton>
-      <LogoutButton>Logout</LogoutButton>
+      <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
     </SidebarContainer>
   );
 };

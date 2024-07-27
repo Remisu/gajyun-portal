@@ -10,7 +10,7 @@ const Layout: React.FC = () => {
   return (
     <div style={{ display: 'flex' }}>
       {user && <Sidebar />}
-      <div style={{ flex: 1, padding: '20px', marginLeft: '270px' }}>
+      <div style={{ flex: 1, padding: '20px 40px', marginLeft: '250px' }}>
         <Outlet />
       </div>
     </div>

@@ -2,55 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebaseConfig';
 import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import styled from 'styled-components';
-import { Tabs, Tab } from '@mui/material';
-
-const Container = styled.div`
-  padding: 20px;
-`;
-
-const Form = styled.div`
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-`;
-
-const Input = styled.input`
-  margin-bottom: 10px;
-  padding: 8px;
-  font-size: 16px;
-  width: 300px;
-`;
-
-const Button = styled.button`
-  padding: 10px 20px;
-  font-size: 16px;
-  color: white;
-  background-color: #4285f4;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-
-  &:hover {
-    background-color: #357ae8;
-  }
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-
-  th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-  }
-
-  th {
-    background-color: #f4f4f4;
-  }
-`;
+import { Container, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Tabs, Tab, Typography } from '@mui/material';
 
 const ScheduleManagement: React.FC = () => {
   const [employees, setEmployees] = useState<any[]>([]);
@@ -187,210 +139,258 @@ const ScheduleManagement: React.FC = () => {
   };
 
   if (!user) {
-    return <p>Acesso negado. Por favor, faça login com um email autorizado.</p>;
+    return <Typography>Acesso negado. Por favor, faça login com um email autorizado.</Typography>;
   }
 
   return (
     <Container>
-      <h1>Schedule Management</h1>
-      <Tabs value={tabIndex} onChange={(e: React.ChangeEvent<{}>, newValue: number) => setTabIndex(newValue)}>
+      <Tabs value={tabIndex} onChange={(e, newValue) => setTabIndex(newValue)}>
         <Tab label="Employees" />
         <Tab label="Checklist Types" />
         <Tab label="Task Types" />
         <Tab label="Tasks" />
         <Tab label="Shifts" />
-      </Tabs>
-      {tabIndex === 0 && (
+      </Tabs>      {tabIndex === 0 && (
         <>
-          <Form>
-            <h2>Employees</h2>
-            <Input
-              type="email"
-              value={newEmployee.email}
-              onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
-              placeholder="Employee email"
-            />
-            <Input
-              type="text"
-              value={newEmployee.name}
-              onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
-              placeholder="Employee name"
-            />
-            <Button onClick={addEmployee}>Add Employee</Button>
-          </Form>
-          <Table>
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Name</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-  {employees.map(employee => (
-    <tr key={employee.id}>
-      <td>{employee.email}</td>
-      <td>{employee.name}</td>
-    </tr>
-  ))}
-</tbody>
-      </Table>
-    </>
-  )}
-  {tabIndex === 1 && (
-    <>
-      <Form>
-        <h2>Checklist Types</h2>
-        <Input
-          type="text"
-          value={newChecklistType}
-          onChange={(e) => setNewChecklistType(e.target.value)}
-          placeholder="Add new checklist type"
-        />
-        <Button onClick={addChecklistType}>Add Checklist Type</Button>
-      </Form>
-      <Table>
-        <thead>
-          <tr>
-            <th>Description</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {checklistTypes.map(checklistType => (
-            <tr key={checklistType.id}>
-              <td>{checklistType.description}</td>
-              <td>
-                <Button onClick={() => deleteChecklistType(checklistType.id)}>Delete</Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </>
-  )}
-  {tabIndex === 2 && (
-    <>
-      <Form>
-        <h2>Task Types</h2>
-        <Input
-          type="text"
-          value={newTaskType}
-          onChange={(e) => setNewTaskType(e.target.value)}
-          placeholder="Add new task type"
-        />
-        <Button onClick={addTaskType}>Add Task Type</Button>
-      </Form>
-      <Table>
-        <thead>
-          <tr>
-            <th>Description</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {taskTypes.map(taskType => (
-            <tr key={taskType.id}>
-              <td>{taskType.description}</td>
-              <td>
-                <Button onClick={() => deleteTaskType(taskType.id)}>Delete</Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </>
-  )}
-  {tabIndex === 3 && (
-    <>
-      <Form>
-        <h2>Tasks</h2>
-        <Input
-          type="text"
-          value={newTask.description}
-          onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-          placeholder="Task description"
-        />
-        <Input
-          type="text"
-          value={newTask.taskTypeID}
-          onChange={(e) => setNewTask({ ...newTask, taskTypeID: e.target.value })}
-          placeholder="Task Type ID"
-        />
-        <Button onClick={addTask}>Add Task</Button>
-      </Form>
-      <Table>
-        <thead>
-          <tr>
-            <th>Description</th>
-            <th>Task Type ID</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tasks.map(task => (
-            <tr key={task.id}>
-              <td>{task.description}</td>
-              <td>{task.taskTypeID}</td>
-              <td>
-                <Button onClick={() => deleteTask(task.id)}>Delete</Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </>
-  )}
-  {tabIndex === 4 && (
-    <>
-      <Form>
-        <h2>Shifts</h2>
-        <Input
-          type="text"
-          value={newShift.employeeID}
-          onChange={(e) => setNewShift({ ...newShift, employeeID: e.target.value })}
-          placeholder="Employee ID"
-        />
-        <Input
-          type="text"
-          value={newShift.checklistTypeID}
-          onChange={(e) => setNewShift({ ...newShift, checklistTypeID: e.target.value })}
-          placeholder="Checklist Type ID"
-        />
-        <Input
-          type="date"
-          value={newShift.shiftDate}
-          onChange={(e) => setNewShift({ ...newShift, shiftDate: e.target.value })}
-          placeholder="Shift Date"
-        />
-        <Button onClick={addShift}>Add Shift</Button>
-      </Form>
-      <Table>
-        <thead>
-          <tr>
-            <th>Employee ID</th>
-            <th>Checklist Type ID</th>
-            <th>Shift Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {shifts.map(shift => (
-            <tr key={shift.id}>
-              <td>{shift.employeeID}</td>
-              <td>{shift.checklistTypeID}</td>
-              <td>{shift.shiftDate}</td>
-              <td>
-                <Button onClick={() => deleteShift(shift.id)}>Delete</Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </>
-  )}
-</Container>
-);
+          <TextField
+            label="Employee email"
+            variant="outlined"
+            value={newEmployee.email}
+            onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Employee name"
+            variant="outlined"
+            value={newEmployee.name}
+            onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
+            fullWidth
+            margin="normal"
+          />
+          <Button variant="contained" color="primary" onClick={addEmployee} style={{ marginBottom: '20px' }}>
+            Add Employee
+          </Button>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {employees.map(employee => (
+                  <TableRow key={employee.id}>
+                    <TableCell>{employee.email}</TableCell>
+                    <TableCell>{employee.name}</TableCell>
+                    <TableCell>
+                      <Button variant="contained" color="secondary" onClick={() => deleteEmployee(employee.id)}>
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      )}
+      {tabIndex === 1 && (
+        <>
+          <Typography variant="h6" component="h2" gutterBottom>
+            Checklist Types
+          </Typography>
+          <TextField
+            label="Add new checklist type"
+            variant="outlined"
+            value={newChecklistType}
+            onChange={(e) => setNewChecklistType(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <Button variant="contained" color="primary" onClick={addChecklistType} style={{ marginBottom: '20px' }}>
+            Add Checklist Type
+          </Button>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {checklistTypes.map(checklistType => (
+                  <TableRow key={checklistType.id}>
+                    <TableCell>{checklistType.description}</TableCell>
+                    <TableCell>
+                      <Button variant="contained" color="secondary" onClick={() => deleteChecklistType(checklistType.id)}>
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      )}
+      {tabIndex === 2 && (
+        <>
+          <Typography variant="h6" component="h2" gutterBottom>
+            Task Types
+          </Typography>
+          <TextField
+            label="Add new task type"
+            variant="outlined"
+            value={newTaskType}
+            onChange={(e) => setNewTaskType(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <Button variant="contained" color="primary" onClick={addTaskType} style={{ marginBottom: '20px' }}>
+            Add Task Type
+          </Button>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {taskTypes.map(taskType => (
+                  <TableRow key={taskType.id}>
+                    <TableCell>{taskType.description}</TableCell>
+                    <TableCell>
+                      <Button variant="contained" color="secondary" onClick={() => deleteTaskType(taskType.id)}>
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      )}
+      {tabIndex === 3 && (
+        <>
+          <Typography variant="h6" component="h2" gutterBottom>
+            Tasks
+          </Typography>
+          <TextField
+            label="Task description"
+            variant="outlined"
+            value={newTask.description}
+            onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Task Type ID"
+            variant="outlined"
+            value={newTask.taskTypeID}
+            onChange={(e) => setNewTask({ ...newTask, taskTypeID: e.target.value })}
+            fullWidth
+            margin="normal"
+          />
+          <Button variant="contained" color="primary" onClick={addTask} style={{ marginBottom: '20px' }}>
+            Add Task
+          </Button>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Task Type ID</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {tasks.map(task => (
+                  <TableRow key={task.id}>
+                    <TableCell>{task.description}</TableCell>
+                    <TableCell>{task.taskTypeID}</TableCell>
+                    <TableCell>
+                      <Button variant="contained" color="secondary" onClick={() => deleteTask(task.id)}>
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      )}
+      {tabIndex === 4 && (
+        <>
+          <Typography variant="h6" component="h2" gutterBottom>
+            Shifts
+          </Typography>
+          <TextField
+            label="Employee ID"
+            variant="outlined"
+            value={newShift.employeeID}
+            onChange={(e) => setNewShift({ ...newShift, employeeID: e.target.value })}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Checklist Type ID"
+            variant="outlined"
+            value={newShift.checklistTypeID}
+            onChange={(e) => setNewShift({ ...newShift, checklistTypeID: e.target.value })}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Shift Date"
+            type="date"
+            InputLabelProps={{ shrink: true }}
+            variant="outlined"
+            value={newShift.shiftDate}
+            onChange={(e) => setNewShift({ ...newShift, shiftDate: e.target.value })}
+            fullWidth
+            margin="normal"
+          />
+          <Button variant="contained" color="primary" onClick={addShift} style={{ marginBottom: '20px' }}>
+            Add Shift
+          </Button>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Employee ID</TableCell>
+                  <TableCell>Checklist Type ID</TableCell>
+                  <TableCell>Shift Date</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {shifts.map(shift => (
+                  <TableRow key={shift.id}>
+                    <TableCell>{shift.employeeID}</TableCell>
+                    <TableCell>{shift.checklistTypeID}</TableCell>
+                    <TableCell>{shift.shiftDate}</TableCell>
+                    <TableCell>
+                      <Button variant="contained" color="secondary" onClick={() => deleteShift(shift.id)}>
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      )}
+    </Container>
+  );
 };
 
 export default ScheduleManagement;
