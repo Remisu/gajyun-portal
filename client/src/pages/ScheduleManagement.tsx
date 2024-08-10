@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebaseConfig';
-import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, updateDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Container, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Tabs, Tab, Typography } from '@mui/material';
 
@@ -11,7 +11,9 @@ const ScheduleManagement: React.FC = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [shifts, setShifts] = useState<any[]>([]);
   const [newEmployee, setNewEmployee] = useState({ email: '', name: '' });
+  const [editingEmployee, setEditingEmployee] = useState<any>(null);
   const [newChecklistType, setNewChecklistType] = useState('');
+  const [editingCheckListType, setEditingCheckListType] = useState<any>(null);
   const [newTaskType, setNewTaskType] = useState('');
   const [newTask, setNewTask] = useState({ description: '', taskTypeID: '', days: [] });
   const [newShift, setNewShift] = useState({ employeeID: '', checklistTypeID: '', shiftDate: '' });
@@ -138,6 +140,31 @@ const ScheduleManagement: React.FC = () => {
     setShifts(shiftsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
+  const updateEmployee = async () => {
+    if (editingEmployee) {
+      const employeeDoc = doc(db, 'employees', editingEmployee.id);
+      await updateDoc(employeeDoc, {
+        email: editingEmployee.email,
+        name: editingEmployee.name
+      });
+      setEditingEmployee(null);
+      const employeesSnapshot = await getDocs(collection(db, 'employees'));
+      setEmployees(employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }
+  };
+
+  const updateCheckListType = async () => {
+    if (editingCheckListType) {
+      const checkListTypeDoc = doc(db, 'checklistTypes', editingCheckListType.id);
+      await updateDoc(checkListTypeDoc, {
+        description: editingCheckListType.description
+      });
+      setEditingCheckListType(null);
+      const checkListTypeSnapshot = await getDocs(collection(db, 'checklistTypes'));
+      setEmployees(checkListTypeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }
+  };
+
   if (!user) {
     return <Typography>Acesso negado. Por favor, faça login com um email autorizado.</Typography>;
   }
@@ -150,27 +177,57 @@ const ScheduleManagement: React.FC = () => {
         <Tab label="Task Types" />
         <Tab label="Tasks" />
         <Tab label="Shifts" />
-      </Tabs>      {tabIndex === 0 && (
+      </Tabs>      
+      {tabIndex === 0 && (
         <>
-          <TextField
-            label="Employee email"
-            variant="outlined"
-            value={newEmployee.email}
-            onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            label="Employee name"
-            variant="outlined"
-            value={newEmployee.name}
-            onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
-            fullWidth
-            margin="normal"
-          />
-          <Button variant="contained" color="primary" onClick={addEmployee} style={{ marginBottom: '20px' }}>
-            Add Employee
-          </Button>
+          {editingEmployee ? (
+            <>
+              <TextField
+                label="Edit Employee email"
+                variant="outlined"
+                value={editingEmployee.email}
+                onChange={(e) => setEditingEmployee({ ...editingEmployee, email: e.target.value })}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                label="Edit Employee name"
+                variant="outlined"
+                value={editingEmployee.name}
+                onChange={(e) => setEditingEmployee({ ...editingEmployee, name: e.target.value })}
+                fullWidth
+                margin="normal"
+              />
+              <Button variant="contained" color="primary" onClick={updateEmployee} style={{ marginBottom: '20px' }}>
+                Update Employee
+              </Button>
+              <Button variant="contained" onClick={() => setEditingEmployee(null)} style={{ marginBottom: '20px', marginLeft: '10px' }}>
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <>
+              <TextField
+                label="Employee email"
+                variant="outlined"
+                value={newEmployee.email}
+                onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                label="Employee name"
+                variant="outlined"
+                value={newEmployee.name}
+                onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
+                fullWidth
+                margin="normal"
+              />
+              <Button variant="contained" color="primary" onClick={addEmployee} style={{ marginBottom: '20px' }}>
+                Add Employee
+              </Button>
+            </>
+          )}
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
@@ -188,6 +245,9 @@ const ScheduleManagement: React.FC = () => {
                     <TableCell>
                       <Button variant="contained" color="secondary" onClick={() => deleteEmployee(employee.id)}>
                         Delete
+                      </Button>
+                      <Button variant="contained" color="primary" style={{ marginLeft: '10px' }} onClick={() => setEditingEmployee(employee)}>
+                        Edit
                       </Button>
                     </TableCell>
                   </TableRow>
