@@ -4,6 +4,13 @@ import { collection, getDocs, addDoc, deleteDoc, updateDoc, doc } from 'firebase
 import { onAuthStateChanged } from 'firebase/auth';
 import { Container, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Tabs, Tab, Typography } from '@mui/material';
 
+interface Task {
+  id?: string;  // Torna o `id` opcional
+  description: string;
+  taskTypeID: string;
+  days: string[];
+}
+
 const ScheduleManagement: React.FC = () => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [checklistTypes, setChecklistTypes] = useState<any[]>([]);
@@ -15,7 +22,9 @@ const ScheduleManagement: React.FC = () => {
   const [newChecklistType, setNewChecklistType] = useState('');
   const [editingCheckListType, setEditingCheckListType] = useState<any>(null);
   const [newTaskType, setNewTaskType] = useState('');
-  const [newTask, setNewTask] = useState({ description: '', taskTypeID: '', days: [] });
+  const [editingTaskType, setEditingTaskType] = useState<any>(null);
+  const [newTask, setNewTask] = useState<Task>({ description: '', taskTypeID: '', days: [] });
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [newShift, setNewShift] = useState({ employeeID: '', checklistTypeID: '', shiftDate: '' });
   const [user, setUser] = useState<any>(null);
   const [tabIndex, setTabIndex] = useState(0);
@@ -165,6 +174,34 @@ const ScheduleManagement: React.FC = () => {
     }
   };
 
+  const updateTaskType = async () => {
+    if (editingTaskType) {
+      const taskTypeDoc = doc(db, 'taskTypes', editingTaskType.id);
+      await updateDoc(taskTypeDoc, {
+        description: editingTaskType.description
+      });
+      setEditingTaskType(null);
+      const taskTypesSnapshot = await getDocs(collection(db, 'taskTypes'));
+      setTaskTypes(taskTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }
+  };
+
+  const updateTask = async () => {
+    if (editingTask && editingTask.id) { // Verifica se `id` existe
+      const taskDoc = doc(db, 'tasks', editingTask.id);
+      await updateDoc(taskDoc, {
+        description: editingTask.description,
+        taskTypeID: editingTask.taskTypeID,
+        days: editingTask.days
+      });
+      setEditingTask(null);
+      const tasksSnapshot = await getDocs(collection(db, 'tasks'));
+      setTasks(tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task)));
+    } else {
+      console.error("Task ID is undefined. Cannot update task without an ID.");
+    }
+  };
+
   if (!user) {
     return <Typography>Acesso negado. Por favor, faça login com um email autorizado.</Typography>;
   }
@@ -258,140 +295,250 @@ const ScheduleManagement: React.FC = () => {
         </>
       )}
       {tabIndex === 1 && (
-        <>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Checklist Types
-          </Typography>
-          <TextField
-            label="Add new checklist type"
-            variant="outlined"
-            value={newChecklistType}
-            onChange={(e) => setNewChecklistType(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
-          <Button variant="contained" color="primary" onClick={addChecklistType} style={{ marginBottom: '20px' }}>
-            Add Checklist Type
-          </Button>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Description</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {checklistTypes.map(checklistType => (
-                  <TableRow key={checklistType.id}>
-                    <TableCell>{checklistType.description}</TableCell>
-                    <TableCell>
-                      <Button variant="contained" color="secondary" onClick={() => deleteChecklistType(checklistType.id)}>
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </>
-      )}
+  <>
+    {editingCheckListType ? (
+      <>
+        <TextField
+          label="Edit Checklist Type"
+          variant="outlined"
+          value={editingCheckListType.description}
+          onChange={(e) => setEditingCheckListType({ ...editingCheckListType, description: e.target.value })}
+          fullWidth
+          margin="normal"
+        />
+        <Button variant="contained" color="primary" onClick={updateCheckListType} style={{ marginBottom: '20px' }}>
+          Update Checklist Type
+        </Button>
+        <Button variant="contained" onClick={() => setEditingCheckListType(null)} style={{ marginBottom: '20px', marginLeft: '10px' }}>
+          Cancel
+        </Button>
+      </>
+    ) : (
+      <>
+        <TextField
+          label="Add new checklist type"
+          variant="outlined"
+          value={newChecklistType}
+          onChange={(e) => setNewChecklistType(e.target.value)}
+          fullWidth
+          margin="normal"
+        />
+        <Button variant="contained" color="primary" onClick={addChecklistType} style={{ marginBottom: '20px' }}>
+          Add Checklist Type
+        </Button>
+      </>
+    )}
+
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Description</TableCell>
+            <TableCell>Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {checklistTypes.map(checklistType => (
+            <TableRow key={checklistType.id}>
+              <TableCell>{checklistType.description}</TableCell>
+              <TableCell>
+                <Button variant="contained" color="secondary" onClick={() => deleteChecklistType(checklistType.id)}>
+                  Delete
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  style={{ marginLeft: '10px' }}
+                  onClick={() => setEditingCheckListType(checklistType)}
+                >
+                  Edit
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  </>
+)}
       {tabIndex === 2 && (
-        <>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Task Types
-          </Typography>
-          <TextField
-            label="Add new task type"
-            variant="outlined"
-            value={newTaskType}
-            onChange={(e) => setNewTaskType(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
-          <Button variant="contained" color="primary" onClick={addTaskType} style={{ marginBottom: '20px' }}>
-            Add Task Type
-          </Button>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Description</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {taskTypes.map(taskType => (
-                  <TableRow key={taskType.id}>
-                    <TableCell>{taskType.description}</TableCell>
-                    <TableCell>
-                      <Button variant="contained" color="secondary" onClick={() => deleteTaskType(taskType.id)}>
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </>
-      )}
+  <>
+    {editingTaskType ? (
+      <>
+        <TextField
+          label="Edit Task Type"
+          variant="outlined"
+          value={editingTaskType.description}
+          onChange={(e) => setEditingTaskType({ ...editingTaskType, description: e.target.value })}
+          fullWidth
+          margin="normal"
+        />
+        <Button variant="contained" color="primary" onClick={updateTaskType} style={{ marginBottom: '20px' }}>
+          Update Task Type
+        </Button>
+        <Button variant="contained" onClick={() => setEditingTaskType(null)} style={{ marginBottom: '20px', marginLeft: '10px' }}>
+          Cancel
+        </Button>
+      </>
+    ) : (
+      <>
+        <Typography variant="h6" component="h2" gutterBottom>
+          Task Types
+        </Typography>
+        <TextField
+          label="Add new task type"
+          variant="outlined"
+          value={newTaskType}
+          onChange={(e) => setNewTaskType(e.target.value)}
+          fullWidth
+          margin="normal"
+        />
+        <Button variant="contained" color="primary" onClick={addTaskType} style={{ marginBottom: '20px' }}>
+          Add Task Type
+        </Button>
+      </>
+    )}
+
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Description</TableCell>
+            <TableCell>Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {taskTypes.map(taskType => (
+            <TableRow key={taskType.id}>
+              <TableCell>{taskType.description}</TableCell>
+              <TableCell>
+                <Button variant="contained" color="secondary" onClick={() => deleteTaskType(taskType.id)}>
+                  Delete
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  style={{ marginLeft: '10px' }}
+                  onClick={() => setEditingTaskType(taskType)}
+                >
+                  Edit
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  </>
+)}
       {tabIndex === 3 && (
-        <>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Tasks
-          </Typography>
-          <TextField
-            label="Task description"
-            variant="outlined"
-            value={newTask.description}
-            onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            label="Task Type ID"
-            variant="outlined"
-            value={newTask.taskTypeID}
-            onChange={(e) => setNewTask({ ...newTask, taskTypeID: e.target.value })}
-            fullWidth
-            margin="normal"
-          />
-          <Button variant="contained" color="primary" onClick={addTask} style={{ marginBottom: '20px' }}>
-            Add Task
-          </Button>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Description</TableCell>
-                  <TableCell>Task Type ID</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {tasks.map(task => (
-                  <TableRow key={task.id}>
-                    <TableCell>{task.description}</TableCell>
-                    <TableCell>{task.taskTypeID}</TableCell>
-                    <TableCell>
-                      <Button variant="contained" color="secondary" onClick={() => deleteTask(task.id)}>
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </>
-      )}
+  <>
+    {editingTask ? (
+      <>
+        <TextField
+          label="Edit Task Description"
+          variant="outlined"
+          value={editingTask.description}
+          onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
+          fullWidth
+          margin="normal"
+        />
+        <TextField
+          label="Edit Task Type ID"
+          variant="outlined"
+          value={editingTask.taskTypeID}
+          onChange={(e) => setEditingTask({ ...editingTask, taskTypeID: e.target.value })}
+          fullWidth
+          margin="normal"
+        />
+        <TextField
+          label="Edit Task Days"
+          variant="outlined"
+          value={editingTask.days.join(', ')}
+          onChange={(e) => setEditingTask({ ...editingTask, days: e.target.value.split(',').map(day => day.trim()) })}
+          fullWidth
+          margin="normal"
+        />
+        <Button variant="contained" color="primary" onClick={updateTask} style={{ marginBottom: '20px' }}>
+          Update Task
+        </Button>
+        <Button variant="contained" onClick={() => setEditingTask(null)} style={{ marginBottom: '20px', marginLeft: '10px' }}>
+          Cancel
+        </Button>
+      </>
+    ) : (
+      <>
+        <Typography variant="h6" component="h2" gutterBottom>
+          Tasks
+        </Typography>
+        <TextField
+          label="Task Description"
+          variant="outlined"
+          value={newTask.description}
+          onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+          fullWidth
+          margin="normal"
+        />
+        <TextField
+          label="Task Type ID"
+          variant="outlined"
+          value={newTask.taskTypeID}
+          onChange={(e) => setNewTask({ ...newTask, taskTypeID: e.target.value })}
+          fullWidth
+          margin="normal"
+        />
+        <TextField
+  label="Task Days"
+  variant="outlined"
+  value={newTask.days.join(', ')}
+  onChange={(e) => setNewTask({ ...newTask, days: e.target.value.split(',').map(day => day.trim()) })}
+  fullWidth
+  margin="normal"
+/>
+        <Button variant="contained" color="primary" onClick={addTask} style={{ marginBottom: '20px' }}>
+          Add Task
+        </Button>
+      </>
+    )}
+
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Description</TableCell>
+            <TableCell>Task Type ID</TableCell>
+            <TableCell>Days</TableCell>
+            <TableCell>Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {tasks.map(task => (
+            <TableRow key={task.id}>
+              <TableCell>{task.description}</TableCell>
+              <TableCell>{task.taskTypeID}</TableCell>
+              <TableCell>{task.days.join(', ')}</TableCell>
+              <TableCell>
+                <Button variant="contained" color="secondary" onClick={() => deleteTask(task.id)}>
+                  Delete
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  style={{ marginLeft: '10px' }}
+                  onClick={() => setEditingTask(task)}
+                >
+                  Edit
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  </>
+)}
       {tabIndex === 4 && (
         <>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Shifts
-          </Typography>
           <TextField
             label="Employee ID"
             variant="outlined"
