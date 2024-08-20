@@ -3,6 +3,7 @@ import { db, auth } from '../firebaseConfig';
 import { collection, getDocs, addDoc, deleteDoc, updateDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Container, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Tabs, Tab, Typography } from '@mui/material';
+import { Checkbox, FormControlLabel } from '@mui/material';
 
 interface Task {
   id?: string;  // Torna o `id` opcional
@@ -39,13 +40,13 @@ const ScheduleManagement: React.FC = () => {
         const taskTypesCollection = collection(db, 'taskTypes');
         const tasksCollection = collection(db, 'tasks');
         const shiftsCollection = collection(db, 'shifts');
-
+  
         const employeesSnapshot = await getDocs(employeesCollection);
         const checklistTypesSnapshot = await getDocs(checklistTypesCollection);
         const taskTypesSnapshot = await getDocs(taskTypesCollection);
         const tasksSnapshot = await getDocs(tasksCollection);
         const shiftsSnapshot = await getDocs(shiftsCollection);
-
+  
         setEmployees(employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         setChecklistTypes(checklistTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         setTaskTypes(taskTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -53,7 +54,7 @@ const ScheduleManagement: React.FC = () => {
         setShifts(shiftsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       }
     };
-
+  
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser && allowedEmails.includes(currentUser.email || '')) {
         setUser(currentUser);
@@ -62,9 +63,9 @@ const ScheduleManagement: React.FC = () => {
         setUser(null);
       }
     });
-
+  
     return () => unsubscribe();
-  }, [user]);
+  }, [user, allowedEmails]); // Adicione `allowedEmails` à lista de dependências
 
   const addEmployee = async () => {
     const employeesCollection = collection(db, 'employees');
@@ -169,8 +170,15 @@ const ScheduleManagement: React.FC = () => {
         description: editingCheckListType.description
       });
       setEditingCheckListType(null);
-      const checkListTypeSnapshot = await getDocs(collection(db, 'checklistTypes'));
-      setEmployees(checkListTypeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      
+      // Atualiza manualmente a lista de checklist types no estado
+      setChecklistTypes((prevChecklistTypes) =>
+        prevChecklistTypes.map((type) =>
+          type.id === editingCheckListType.id
+            ? { ...type, description: editingCheckListType.description }
+            : type
+        )
+      );
     }
   };
 
@@ -431,7 +439,7 @@ const ScheduleManagement: React.FC = () => {
     </TableContainer>
   </>
 )}
-      {tabIndex === 3 && (
+ {tabIndex === 3 && (
   <>
     {editingTask ? (
       <>
@@ -443,22 +451,42 @@ const ScheduleManagement: React.FC = () => {
           fullWidth
           margin="normal"
         />
+        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+          <FormControlLabel
+            key={day}
+            control={
+              <Checkbox
+                checked={editingTask.days.includes(day)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const updatedDays = e.target.checked
+                    ? [...editingTask.days, day]
+                    : editingTask.days.filter(d => d !== day);
+                  setEditingTask({ ...editingTask, days: updatedDays });
+                }}
+              />
+            }
+            label={day}
+          />
+        ))}
         <TextField
-          label="Edit Task Type ID"
+          select
+          label="Edit Task Type"
           variant="outlined"
           value={editingTask.taskTypeID}
           onChange={(e) => setEditingTask({ ...editingTask, taskTypeID: e.target.value })}
           fullWidth
           margin="normal"
-        />
-        <TextField
-          label="Edit Task Days"
-          variant="outlined"
-          value={editingTask.days.join(', ')}
-          onChange={(e) => setEditingTask({ ...editingTask, days: e.target.value.split(',').map(day => day.trim()) })}
-          fullWidth
-          margin="normal"
-        />
+          SelectProps={{
+            native: true,
+          }}
+        >
+          <option aria-label="None" value="" />
+          {taskTypes.map((taskType) => (
+            <option key={taskType.id} value={taskType.id}>
+              {taskType.description}
+            </option>
+          ))}
+        </TextField>
         <Button variant="contained" color="primary" onClick={updateTask} style={{ marginBottom: '20px' }}>
           Update Task
         </Button>
@@ -480,21 +508,41 @@ const ScheduleManagement: React.FC = () => {
           margin="normal"
         />
         <TextField
-          label="Task Type ID"
+          select
+          label="Task Type"
           variant="outlined"
           value={newTask.taskTypeID}
           onChange={(e) => setNewTask({ ...newTask, taskTypeID: e.target.value })}
           fullWidth
           margin="normal"
-        />
-        <TextField
-  label="Task Days"
-  variant="outlined"
-  value={newTask.days.join(', ')}
-  onChange={(e) => setNewTask({ ...newTask, days: e.target.value.split(',').map(day => day.trim()) })}
-  fullWidth
-  margin="normal"
-/>
+          SelectProps={{
+            native: true,
+          }}
+        >
+          <option aria-label="None" value="" />
+          {taskTypes.map((taskType) => (
+            <option key={taskType.id} value={taskType.id}>
+              {taskType.description}
+            </option>
+          ))}
+        </TextField>
+        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+          <FormControlLabel
+            key={day}
+            control={
+              <Checkbox
+                checked={newTask.days.includes(day)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const updatedDays = e.target.checked
+                    ? [...newTask.days, day]
+                    : newTask.days.filter((d) => d !== day);
+                  setNewTask({ ...newTask, days: updatedDays });
+                }}
+              />
+            }
+            label={day}
+          />
+        ))}
         <Button variant="contained" color="primary" onClick={addTask} style={{ marginBottom: '20px' }}>
           Add Task
         </Button>
@@ -506,7 +554,7 @@ const ScheduleManagement: React.FC = () => {
         <TableHead>
           <TableRow>
             <TableCell>Description</TableCell>
-            <TableCell>Task Type ID</TableCell>
+            <TableCell>Task Type</TableCell>
             <TableCell>Days</TableCell>
             <TableCell>Actions</TableCell>
           </TableRow>
@@ -515,7 +563,7 @@ const ScheduleManagement: React.FC = () => {
           {tasks.map(task => (
             <TableRow key={task.id}>
               <TableCell>{task.description}</TableCell>
-              <TableCell>{task.taskTypeID}</TableCell>
+              <TableCell>{taskTypes.find(tt => tt.id === task.taskTypeID)?.description || task.taskTypeID}</TableCell>
               <TableCell>{task.days.join(', ')}</TableCell>
               <TableCell>
                 <Button variant="contained" color="secondary" onClick={() => deleteTask(task.id)}>
