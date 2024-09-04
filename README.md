@@ -1,111 +1,117 @@
-# Schedule Management System
 
-This is a schedule management system developed in React and Firebase, designed to enable the creation, editing, and management of employees, checklist types, task types, tasks, and shifts.
+# React Firebase Work Schedule Management App
 
-## Features
+This project is a web application built using React, Firebase, and Firestore, aimed at managing work schedules, tasks, and employee shifts. The application includes authentication, protected routes, and a robust user interface for managing employees, tasks, and shifts.
 
-- **Employee Management:** Add, edit, and delete employees.
-- **Checklist Types:** Create, edit, and delete checklist types.
-- **Task Types:** Create, edit, and delete task types.
-- **Task Management:** Add, edit, and delete tasks, including selecting the days of the week the task will be performed.
-- **Shift Management:** Add, edit, and delete shifts, associating employees and checklists with specific dates.
-- **Authentication:** Only authorized users can access the system.
+## Overview
 
-## Technologies Used
+- **Framework**: React
+- **Backend**: Firebase Authentication and Firestore
+- **Purpose**: To manage work schedules, tasks, and employee shifts with a focus on user authentication and data management.
+- **Key Features**:
+  - User authentication with Firebase Authentication
+  - Work schedule management using Firestore
+  - Responsive and interactive UI using React and Material-UI
+  - Protected routes to ensure only authorized users can access certain features
 
-- **Frontend:**
-  - React
-  - TypeScript
-  - Material-UI
+## Project Structure
 
-- **Backend:**
-  - Firebase Firestore for data storage
-  - Firebase Authentication for user authentication
+### Public and HTML
 
-## Installation
+- **`client/public/index.html`**: The main HTML file that serves as the template for the React application. It includes basic meta tags and links to the manifest and favicon.
+
+### Components
+
+- **`client/src/components/Layout.tsx`**: Defines the layout for the application, including a sidebar for navigation and an outlet for rendering the main content.
+- **`client/src/components/ProtectedRoute.tsx`**: A higher-order component that protects routes from unauthorized access, allowing only users with specific emails to view certain pages.
+- **`client/src/components/Schedule.tsx`**: Manages and displays a list of schedules, allowing users to add, update, and delete schedule entries.
+- **`client/src/components/Sidebar.tsx`**: A sidebar component that includes links to different sections of the application and a logout button.
+  
+### Pages
+
+- **`client/src/pages/Login.tsx`**: The login page that allows users to sign in using Google authentication. It checks if the user’s email is authorized and redirects them accordingly.
+- **`client/src/pages/LoginStyles.ts`**: Contains styled-components used in the Login page for a consistent and visually appealing design.
+- **`client/src/pages/ScheduleManagement.tsx`**: Provides a comprehensive interface for managing employees, task types, tasks, and shifts. This page allows CRUD operations for all these entities.
+- **`client/src/pages/WorkSchedule.tsx`**: Displays a calendar view of the work schedule, showing all shifts in a visual format using the `react-big-calendar` library.
+
+### App and Configuration
+
+- **`client/src/App.tsx`**: The main component that sets up the routing for the application, including the login page, protected routes, and layout.
+- **`client/src/firebaseConfig.ts`**: Configures Firebase for the application, including authentication and Firestore database initialization.
+- **`client/src/index.tsx`**: The entry point for the React application, rendering the `App` component into the root DOM node.
+
+### Styling and Assets
+
+- **`client/src/App.css`**: Global CSS styles applied across the application.
+- **`client/package.json`**: Lists all dependencies, scripts, and configurations for the project, including both runtime and development dependencies.
+- **`client/tsconfig.json`**: TypeScript configuration file, specifying compiler options and the included files for type checking.
+
+## Setup and Execution
 
 ### Prerequisites
 
-Ensure you have Node.js and npm installed on your machine.
+- **Node.js** and **npm** installed on your machine
+- **Firebase** project set up with authentication and Firestore enabled
+- Environment variables configured for Firebase API keys and other settings
 
-### Steps
+### Installation
 
-1. Clone the repository:
-
+1. Clone the repository to your local machine:
    ```bash
-   git clone https://github.com/username/schedule-management.git
+   git clone https://github.com/your-username/work-schedule-management.git
+   cd work-schedule-management/client
    ```
 
-2. Navigate to the project directory:
-
-   ```bash
-   cd schedule-management
-   ```
-
-3. Install the dependencies:
-
+2. Install the dependencies:
    ```bash
    npm install
    ```
 
-4. Configure Firebase:
-
-   - Create a project in [Firebase](https://firebase.google.com/).
-   - Add a `firebaseConfig.js` file in the `src` directory with your Firebase credentials:
-
-     ```javascript
-     import { initializeApp } from "firebase/app";
-     import { getFirestore } from "firebase/firestore";
-     import { getAuth } from "firebase/auth";
-
-     const firebaseConfig = {
-       apiKey: "your-api-key",
-       authDomain: "your-auth-domain",
-       projectId: "your-project-id",
-       storageBucket: "your-storage-bucket",
-       messagingSenderId: "your-messaging-sender-id",
-       appId: "your-app-id"
-     };
-
-     const app = initializeApp(firebaseConfig);
-     const db = getFirestore(app);
-     const auth = getAuth(app);
-
-     export { db, auth };
+3. Set up environment variables:
+   - Create a `.env` file in the `client` directory with the following contents:
+     ```
+     REACT_APP_FIREBASE_API_KEY=your-api-key
+     REACT_APP_FIREBASE_AUTH_DOMAIN=your-auth-domain
+     REACT_APP_FIREBASE_PROJECT_ID=your-project-id
+     REACT_APP_FIREBASE_STORAGE_BUCKET=your-storage-bucket
+     REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+     REACT_APP_FIREBASE_APP_ID=your-app-id
+     REACT_APP_FIREBASE_MEASUREMENT_ID=your-measurement-id
      ```
 
-5. Start the project:
+### Running the Application
 
+1. Start the development server:
    ```bash
    npm start
    ```
 
-   The project will run on `http://localhost:3000`.
+2. The application will be available at `http://localhost:3000`.
 
-## Usage
+### Deployment
 
-- Log in with an authorized email.
-- Use the tabs to navigate and manage employees, checklist types, task types, tasks, and shifts.
-- Edit and delete actions require confirmation to prevent accidental changes.
+To create a production build of the application:
 
-## Contributing
+```bash
+npm run build
+```
 
-If you want to contribute to this project, please follow these steps:
+This will create an optimized build in the `build` directory, which can be deployed to any static hosting service.
 
-1. Fork the repository.
-2. Create a new branch: `git checkout -b my-branch`.
-3. Make your changes and commit: `git commit -m 'My new feature'`.
-4. Push to the main branch: `git push origin my-branch`.
-5. Open a Pull Request.
+## Dependencies
+
+- **React**: Frontend framework for building user interfaces
+- **Firebase**: Backend services for authentication and data storage
+- **Material-UI**: UI component library for React
+- **React Router**: For managing navigation and routing in the app
+- **React Big Calendar**: For displaying schedules and shifts in a calendar format
+- **Styled Components**: For styling React components with CSS-in-JS
+- **TypeScript**: For type-safe JavaScript development
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. (Not implemented)
+This project is licensed under the MIT License.
 
-## Author
+---
 
-- **Emerson Barros** - [My Github](https://github.com/Remisu)
-
-## Contact
-
-For any questions or suggestions, contact me at [emersongne@gmail.com](mailto:your.email@example.com).
+This README provides an overview and setup instructions for the Work Schedule Management App. Feel free to modify it to better fit your project's specific details.
